@@ -47,6 +47,16 @@ function App() {
   };
 
   useEffect(() => {
+    // Check if this is a password recovery link (check URL hash)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+
+    if (type === 'recovery') {
+      setIsPasswordRecovery(true);
+      setLoading(false);
+      return;
+    }
+
     // 1. Сессияны тексеру
     supabase.auth.getSession().then(({ data, error }) => {
       if (error) {
