@@ -7,6 +7,7 @@ import DriversPage from './components/DriversPage';
 import VehiclesPage from './components/VehiclesPage';
 import SettingsPage from './components/SettingsPage';
 import LoginPage from './components/LoginPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import { supabase, getUserProfile } from './services/supabase';
 import { Profile, UserRole } from './types';
 import { Loader2 } from 'lucide-react';
@@ -17,6 +18,7 @@ function App() {
   const [userProfile, setUserProfile] = useState<Profile | null>(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const fetchProfile = async (user: any) => {
     try {
@@ -66,6 +68,13 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      // Password recovery event
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordRecovery(true);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       if (session?.user) {
         if (event === 'SIGNED_IN') setLoading(true);
@@ -103,6 +112,18 @@ function App() {
         <Loader2 className="w-10 h-10 text-stripe-accent animate-spin" />
         <p className="text-slate-500 text-sm font-medium">Жүйе жүктелуде...</p>
       </div>
+    );
+  }
+
+  // Password Recovery mode
+  if (isPasswordRecovery) {
+    return (
+      <ResetPasswordPage
+        onComplete={() => {
+          setIsPasswordRecovery(false);
+          window.location.href = '/';
+        }}
+      />
     );
   }
 
