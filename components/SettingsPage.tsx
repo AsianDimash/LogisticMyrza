@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { UserRole, Profile } from '../types';
 import { fetchProfiles, deleteProfileEntry, supabaseUrl, supabaseKey, supabase } from '../services/supabase';
 import { createClient } from '@supabase/supabase-js';
-import { Users, Plus, Shield, User, Trash2, Lock, Loader2, AlertCircle, Wrench, KeyRound } from 'lucide-react';
+import { Users, Plus, Shield, User, Trash2, Lock, Loader2, AlertCircle, KeyRound } from 'lucide-react';
 
 interface SettingsPageProps {
     currentUserRole?: UserRole;
@@ -50,44 +50,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
         loadUsers();
     }, []);
 
-    // --- "NUCLEAR FIX": BECOME ADMIN BUTTON ---
-    const handleForceAdmin = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return alert("Сіз жүйеге кірмегенсіз.");
 
-            // 1. Алдымен профиль бар ма тексереміз
-            const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-
-            let error;
-
-            if (!profile) {
-                // Профиль жоқ болса, жаңадан Админ ғып ашамыз
-                const { error: insertError } = await supabase.from('profiles').insert([{
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.user_metadata?.full_name || 'Admin User',
-                    role: 'admin'
-                }]);
-                error = insertError;
-            } else {
-                // Профиль бар болса, рөлін Админге ауыстырамыз
-                const { error: updateError } = await supabase.from('profiles')
-                    .update({ role: 'admin' })
-                    .eq('id', user.id);
-                error = updateError;
-            }
-
-            if (error) throw error;
-
-            alert("Сәтті орындалды! Сіз енді АДМИНСІЗ. Жүйе қайта жүктеледі.");
-            window.location.reload();
-
-        } catch (err: any) {
-            alert("Қате: " + getErrorMessage(err));
-        }
-    };
-    // ------------------------------------------
 
     const handleAddUser = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -180,21 +143,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ currentUserRole }) => {
                     <p className="text-slate-500 mt-1">
                         {isAdmin
                             ? "Админ панелі: Барлық құқықтар берілген."
-                            : "Сіз қазір Операторсыз. Админ болу үшін төмендегі батырманы басыңыз."}
+                            : "Сіз қазір Операторсыз. Қолданушылар тізімін көре аласыз."}
                     </p>
                 </div>
 
                 <div className="flex gap-2">
-                    {!isAdmin && (
-                        <button
-                            onClick={handleForceAdmin}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all"
-                        >
-                            <Wrench className="w-4 h-4" />
-                            Админ құқығын алу (Fix)
-                        </button>
-                    )}
-
                     {isAdmin && (
                         <button
                             onClick={() => setIsAddingUser(true)}
